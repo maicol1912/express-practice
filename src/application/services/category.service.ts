@@ -5,6 +5,7 @@ import { Category } from '@domain/models/category.model';
 import { NotFoundException, AlreadyExistsException } from '@domain/exceptions/domain.exception';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@infrastructure/config/logger.config';
+import { IsolationLevel, Transactional } from 'typeorm-transactional';
 
 @injectable()
 export class CategoryService implements CategoryUseCase {
@@ -34,6 +35,7 @@ export class CategoryService implements CategoryUseCase {
     return this.categoryRepository.findAll(page, size);
   }
 
+  @Transactional({ isolationLevel: IsolationLevel.READ_COMMITTED })
   async update(id: string, name?: string, description?: string | null): Promise<Category> {
     const category = await this.findById(id);
 

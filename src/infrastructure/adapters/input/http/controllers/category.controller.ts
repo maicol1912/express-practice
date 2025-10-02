@@ -4,13 +4,26 @@ import { CategoryRequestDTO } from '@application/dto/requests';
 import { ApiResponse } from '@application/dto/responses';
 import { validateDto } from '@shared/utils/validation.util';
 import { CategoryUseCase } from '@domain/ports/in/category.use-case';
+import {
+  Public,
+  RequireAdmin,
+  RequireAuth,
+  RequireRoles,
+  RequireStoreAccess
+} from '@shared/decorators/security.decorator';
 
 @injectable()
+@Public()
 export class CategoryController {
   constructor(
     @inject('CategoryUseCase') private categoryUseCase: CategoryUseCase
   ) { }
 
+  @Public()
+  @RequireAuth()// ===== REQUIERE AUTENTICACIÓN (ADMIN O EMPLOYEE) =====
+  @RequireAdmin()// ===== SOLO ADMIN =====
+  @RequireRoles('ADMIN', 'EMPLOYEE')// ===== ADMIN O EMPLOYEE DE LA TIENDA ESPECÍFICA =====
+  @RequireStoreAccess('storeId')// ===== TIENDA ESPECÍFICA =====
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto = await validateDto(CategoryRequestDTO, req.body);

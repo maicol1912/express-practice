@@ -18,6 +18,7 @@ import { CircuitBreakerDecorator } from '@shared/decorators/circuit-breaker.deco
 import { Retry } from '@shared/decorators/retry.decorator';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@infrastructure/config/logger.config';
+import { IsolationLevel, Transactional } from 'typeorm-transactional';
 
 @injectable()
 export class InventoryService implements InventoryUseCase {
@@ -33,6 +34,7 @@ export class InventoryService implements InventoryUseCase {
   @DistributedLock({ key: 'inventory:${0}:${1}', waitTimeoutSeconds: 30, leaseTimeSeconds: 60 })
   @CircuitBreakerDecorator('inventory-adjust', { timeout: 3000 })
   @Retry({ maxAttempts: 3, delayMs: 1000 })
+  @Transactional({ isolationLevel: IsolationLevel.READ_COMMITTED })
   async adjustStock(
     storeId: string,
     productId: string,
@@ -126,6 +128,7 @@ export class InventoryService implements InventoryUseCase {
   @DistributedLock({ key: 'inventory:${0}:${1}', waitTimeoutSeconds: 30, leaseTimeSeconds: 60 })
   @CircuitBreakerDecorator('inventory-restock', { timeout: 3000 })
   @Retry({ maxAttempts: 3, delayMs: 1000 })
+  @Transactional({ isolationLevel: IsolationLevel.READ_COMMITTED })
   async restock(
     storeId: string,
     productId: string,

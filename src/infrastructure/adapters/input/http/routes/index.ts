@@ -7,7 +7,7 @@ import categoryRoutes from './category.routes';
 import storeRoutes from './store.routes';
 import transferRoutes from './transfer.routes';
 import userRoutes from './user.routes';
-
+import healthRoutes from './health.routes'
 const router: Router = Router();
 
 router.use('/auth', authRoutes);
@@ -18,5 +18,5 @@ router.use('/categories', categoryRoutes);
 router.use('/stores', storeRoutes);
 router.use('/transfers', transferRoutes);
 router.use('/users', userRoutes);
-
+router.use('/health', healthRoutes);
 export default router;

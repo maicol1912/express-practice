@@ -5,6 +5,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import dotenv from 'dotenv';
+import { addTransactionalDataSource, initializeTransactionalContext } from 'typeorm-transactional';
 import { configureDependencyInjection } from './infrastructure/config/container.config';
 import { errorHandler } from './shared/middlewares/error-handler.middleware';
 import { logger } from './shared/utils/logger.util';
@@ -13,14 +14,15 @@ import { AppDataSource } from '@infrastructure/config/database.config';
 // Load environment variables
 dotenv.config();
 
-// Configure dependency injection BEFORE importing routes
-
+// ⭐ CRÍTICO: Inicializar el contexto transaccional ANTES de TODO
+initializeTransactionalContext();
 
 class Server {
   private app: Application;
   private port: number;
 
   constructor() {
+    // Ya NO va aquí initializeTransactionalContext()
     configureDependencyInjection();
     this.app = express();
     this.port = parseInt(process.env.PORT || '8080', 10);
@@ -49,18 +51,19 @@ class Server {
   }
 
   private initializeRoutes(): void {
-    // Health check
-    this.app.get('/health', (_req, res) => {
-      res.status(200).json({ status: 'UP', timestamp: new Date() });
-    });
-
-    // API routes - import after DI is configured
     const routes = require('./infrastructure/adapters/input/http/routes').default;
     this.app.use('/api/v1', routes);
 
-    // 404 handler
-    this.app.use((_req, res) => {
-      res.status(404).json({ error: 'Route not found' });
+    this.app.use((req, res) => {
+      res.status(404).json({
+        status: 'error',
+        statusCode: 404,
+        message: 'Route not found',
+        path: req.originalUrl,
+        method: req.method,
+        timestamp: new Date().toISOString(),
+        suggestion: 'Please check the API documentation for available endpoints'
+      });
     });
   }
 
@@ -71,8 +74,13 @@ class Server {
   private async initializeDatabase(): Promise<void> {
     try {
       await AppDataSource.initialize();
+
+      // ⭐ Registrar el DataSource después de inicializarlo
+      addTransactionalDataSource(AppDataSource);
+
       logger.info('✅ Database connected successfully');
       logger.info(`📊 Database: ${process.env.DB_NAME || 'distributed_inventory'}`);
+      logger.info('🔄 Transactional DataSource registered');
     } catch (error) {
       logger.error('❌ Database connection failed:', error);
       throw error;
@@ -99,12 +107,20 @@ const server = new Server();
 server.start();
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   logger.info('SIGTERM signal received: closing HTTP server');
+  if (AppDataSource.isInitialized) {
+    await AppDataSource.destroy();
+    logger.info('Database connection closed');
+  }
   process.exit(0);
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   logger.info('SIGINT signal received: closing HTTP server');
+  if (AppDataSource.isInitialized) {
+    await AppDataSource.destroy();
+    logger.info('Database connection closed');
+  }
   process.exit(0);
 });

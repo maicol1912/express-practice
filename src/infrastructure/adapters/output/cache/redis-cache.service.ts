@@ -2,11 +2,25 @@ import { injectable } from 'tsyringe';
 import { CachePort } from '@domain/ports/out/cache.port';
 import { redisClient } from '@infrastructure/config/redis.config';
 import { logger } from '@infrastructure/config/logger.config';
+import { Redis } from 'ioredis';
 
 @injectable()
 export class RedisCacheService implements CachePort {
+  getClient(): Redis {
+    return redisClient;
+  }
+
+  isReady(): boolean {
+    return redisClient.status === 'ready';
+  }
+
   async get<T>(key: string): Promise<T | null> {
     try {
+      if (!this.isReady()) {
+        logger.warn('Redis not ready, skipping cache get', { key });
+        return null;
+      }
+
       const value = await redisClient.get(key);
       if (!value) return null;
 
@@ -19,6 +33,11 @@ export class RedisCacheService implements CachePort {
 
   async set(key: string, value: unknown, ttlSeconds: number = 300): Promise<void> {
     try {
+      if (!this.isReady()) {
+        logger.warn('Redis not ready, skipping cache set', { key });
+        return;
+      }
+
       await redisClient.setex(key, ttlSeconds, JSON.stringify(value));
       logger.debug('Cache set:', { key, ttl: ttlSeconds });
     } catch (error) {
@@ -28,6 +47,11 @@ export class RedisCacheService implements CachePort {
 
   async delete(key: string): Promise<void> {
     try {
+      if (!this.isReady()) {
+        logger.warn('Redis not ready, skipping cache delete', { key });
+        return;
+      }
+
       await redisClient.del(key);
       logger.debug('Cache deleted:', { key });
     } catch (error) {
@@ -37,6 +61,11 @@ export class RedisCacheService implements CachePort {
 
   async deletePattern(pattern: string): Promise<void> {
     try {
+      if (!this.isReady()) {
+        logger.warn('Redis not ready, skipping cache pattern delete', { pattern });
+        return;
+      }
+
       const keys = await redisClient.keys(pattern);
       if (keys.length > 0) {
         await redisClient.del(...keys);
@@ -44,6 +73,34 @@ export class RedisCacheService implements CachePort {
       }
     } catch (error) {
       logger.error('Error deleting cache pattern:', { pattern, error });
+    }
+  }
+
+  async clear(): Promise<void> {
+    try {
+      if (!this.isReady()) {
+        logger.warn('Redis not ready, skipping cache clear');
+        return;
+      }
+
+      await redisClient.flushdb();
+      logger.info('Cache cleared successfully');
+    } catch (error) {
+      logger.error('Error clearing cache:', error);
+    }
+  }
+
+  async ping(): Promise<boolean> {
+    try {
+      if (!this.isReady()) {
+        return false;
+      }
+
+      const result = await redisClient.ping();
+      return result === 'PONG';
+    } catch (error) {
+      logger.error('Redis ping failed:', error);
+      return false;
     }
   }
 }
