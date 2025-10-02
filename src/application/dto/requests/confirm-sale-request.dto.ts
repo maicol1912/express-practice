@@ -1,0 +1,19 @@
+import { IsUUID, IsInt, IsString, IsNotEmpty, Min } from 'class-validator';
+
+export class ConfirmSaleRequestDTO {
+  @IsUUID()
+  @IsNotEmpty()
+  storeId!: string;
+
+  @IsUUID()
+  @IsNotEmpty()
+  productId!: string;
+
+  @IsInt()
+  @Min(1)
+  quantity!: number;
+
+  @IsString()
+  @IsNotEmpty()
+  orderRef!: string;
+}

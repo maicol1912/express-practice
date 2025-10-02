@@ -1,0 +1,9 @@
+export { InventoryItemRepository } from './inventory-item.repository';
+export { ProductRepository } from './product.repository';
+export { StoreRepository } from './store.repository';
+export { CategoryRepository } from './category.repository';
+export { ReservationRepository } from './reservation.repository';
+export { TransferRepository } from './transfer.repository';
+export { UserRepository } from './user.repository';
+export { RoleRepository } from './role.repository';
+export { InventoryTransactionRepository } from './inventory-transaction.repository';
