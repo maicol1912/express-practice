@@ -40,6 +40,7 @@ import { CachePort } from '@domain/ports/out/cache.port';
 import { SpringEventPublisher } from '@infrastructure/adapters/output/event/spring-event-publisher';
 import { RedisCacheService } from '@infrastructure/adapters/output/cache/redis-cache.service';
 import { AuthenticationService, CategoryService, InventoryService, ProductService, ReservationService, StoreService, TransferService, UserService } from '@application/services';
+// import { Category2Repository } from '@infrastructure/adapters/output/persistence/repositories/category2.repository';
 
 /**
  * Configure dependency injection container
@@ -97,9 +98,6 @@ export function configureDependencyInjection(): void {
     useClass: AuthenticationService,
   });
 
-  // container.register<AuthenticationUseCase>('AuthenticationUseCaseRegister', {
-  //   useClass: AuthenticationService,
-  // });
 
   container.register<UserUseCase>('UserUseCase', {
     useClass: UserService,

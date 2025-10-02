@@ -1,14 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
-import { container } from 'tsyringe';
-import { InventoryService } from '@application/services/inventory.service';
+import { injectable, inject } from 'tsyringe';
 import { ApiResponse } from '@application/dto/responses';
+import { InventoryUseCase } from '@domain/ports/in/inventory.use-case';
 
+@injectable()
 export class InventoryController {
-  private inventoryService: InventoryService;
-
-  constructor() {
-    this.inventoryService = container.resolve(InventoryService);
-  }
+  constructor(
+    @inject('InventoryUseCase') private inventoryUseCase: InventoryUseCase
+  ) { }
 
   async getStockAvailability(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -18,7 +17,7 @@ export class InventoryController {
         throw new Error('productId and storeId are required');
       }
 
-      const availability = await this.inventoryService.getStockAvailability(
+      const availability = await this.inventoryUseCase.getStockAvailability(
         productId as string,
         storeId as string
       );
@@ -32,7 +31,7 @@ export class InventoryController {
   async getInventoryByStore(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { storeId } = req.params;
-      const inventory = await this.inventoryService.listInventoryByStore(storeId);
+      const inventory = await this.inventoryUseCase.listInventoryByStore(storeId);
       res.status(200).json(ApiResponse.success(inventory, 'Inventory retrieved successfully'));
     } catch (error) {
       next(error);
@@ -48,7 +47,7 @@ export class InventoryController {
         throw new Error('storeId is required');
       }
 
-      const lowStockItems = await this.inventoryService.listLowStockItems(
+      const lowStockItems = await this.inventoryUseCase.listLowStockItems(
         storeId as string,
         threshold
       );

@@ -1,8 +1,9 @@
 import { Router } from 'express';
+import { container } from 'tsyringe';
 import { UserController } from '../controllers/user.controller';
 
 const router: Router = Router();
-const userController = new UserController();
+const userController = container.resolve(UserController);
 
 router.post('/', (req, res, next) => userController.create(req, res, next));
 router.get('/employees', (req, res, next) => userController.listEmployees(req, res, next));

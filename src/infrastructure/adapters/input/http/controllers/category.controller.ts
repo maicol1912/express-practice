@@ -1,21 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
-import { container } from 'tsyringe';
-import { CategoryService } from '@application/services/category.service';
+import { injectable, inject } from 'tsyringe';
 import { CategoryRequestDTO } from '@application/dto/requests';
 import { ApiResponse } from '@application/dto/responses';
 import { validateDto } from '@shared/utils/validation.util';
+import { CategoryUseCase } from '@domain/ports/in/category.use-case';
 
+@injectable()
 export class CategoryController {
-  private categoryService: CategoryService;
-
-  constructor() {
-    this.categoryService = container.resolve(CategoryService);
-  }
+  constructor(
+    @inject('CategoryUseCase') private categoryUseCase: CategoryUseCase
+  ) { }
 
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto = await validateDto(CategoryRequestDTO, req.body);
-      const result = await this.categoryService.create(dto.name, dto.description || null);
+      const result = await this.categoryUseCase.create(dto.name, dto.description || null);
       res.status(201).json(ApiResponse.success(result, 'Category created successfully'));
     } catch (error) {
       next(error);
@@ -25,7 +24,7 @@ export class CategoryController {
   async findById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
-      const result = await this.categoryService.findById(id);
+      const result = await this.categoryUseCase.findById(id);
       res.status(200).json(ApiResponse.success(result));
     } catch (error) {
       next(error);
@@ -36,9 +35,9 @@ export class CategoryController {
     try {
       const page = parseInt(req.query.page as string) || 0;
       const size = parseInt(req.query.size as string) || 20;
-      console.log('PAGE', page)
-      console.log('SIZE', size)
-      const result = await this.categoryService.findAll(page, size);
+      console.log('PAGE', page);
+      console.log('SIZE', size);
+      const result = await this.categoryUseCase.findAll(page, size);
       res.status(200).json(ApiResponse.success(result));
     } catch (error) {
       next(error);
@@ -49,7 +48,7 @@ export class CategoryController {
     try {
       const { id } = req.params;
       const dto = await validateDto(CategoryRequestDTO, req.body);
-      const result = await this.categoryService.update(id, dto.name, dto.description || null);
+      const result = await this.categoryUseCase.update(id, dto.name, dto.description || null);
       res.status(200).json(ApiResponse.success(result, 'Category updated successfully'));
     } catch (error) {
       next(error);
@@ -59,7 +58,7 @@ export class CategoryController {
   async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
-      await this.categoryService.delete(id);
+      await this.categoryUseCase.delete(id);
       res.status(200).json(ApiResponse.success(null, 'Category deleted successfully'));
     } catch (error) {
       next(error);

@@ -1,8 +1,9 @@
 import { Router } from 'express';
+import { container } from 'tsyringe';
 import { StoreController } from '../controllers/store.controller';
 
 const router: Router = Router();
-const storeController = new StoreController();
+const storeController = container.resolve(StoreController);
 
 router.post('/', (req, res, next) => storeController.create(req, res, next));
 router.get('/', (req, res, next) => storeController.findAll(req, res, next));

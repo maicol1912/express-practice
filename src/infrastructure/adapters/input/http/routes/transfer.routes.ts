@@ -1,8 +1,9 @@
 import { Router } from 'express';
+import { container } from 'tsyringe';
 import { TransferController } from '../controllers/transfer.controller';
 
 const router: Router = Router();
-const transferController = new TransferController();
+const transferController = container.resolve(TransferController);
 
 router.post('/', (req, res, next) => transferController.createTransfer(req, res, next));
 router.get('/', (req, res, next) => transferController.listTransfers(req, res, next));

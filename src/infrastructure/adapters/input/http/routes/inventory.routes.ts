@@ -1,8 +1,9 @@
 import { Router } from 'express';
+import { container } from 'tsyringe';
 import { InventoryController } from '../controllers/inventory.controller';
 
 const router: Router = Router();
-const inventoryController = new InventoryController();
+const inventoryController = container.resolve(InventoryController);
 
 router.get('/availability', (req, res, next) => inventoryController.getStockAvailability(req, res, next));
 router.get('/store/:storeId', (req, res, next) => inventoryController.getInventoryByStore(req, res, next));

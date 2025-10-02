@@ -1,16 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
-import { container } from 'tsyringe';
-import { UserService } from '@application/services/user.service';
+import { inject, injectable } from 'tsyringe';
 import { CreateUserRequestDTO } from '@application/dto/requests';
 import { ApiResponse } from '@application/dto/responses';
 import { validateDto } from '@shared/utils/validation.util';
+import { UserUseCase } from '@domain/ports/in/user.use-case';
 
+@injectable()
 export class UserController {
-  private userService: UserService;
 
-  constructor() {
-    this.userService = container.resolve(UserService);
-  }
+  constructor(@inject('UserUseCase') private userService: UserUseCase) { }
 
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
