@@ -37,8 +37,8 @@
       "@shared/*": [
         "src/shared/*"
       ],
-      "@test/*": [
-        "test/*"
+      "@tests/*": [
+        "src/__tests__/*"
       ],
       "@/*": [
         "src/*"
@@ -55,8 +55,6 @@
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "**/*.test.ts",
-    "**/*.spec.ts"
+    "dist"
   ]
 }
